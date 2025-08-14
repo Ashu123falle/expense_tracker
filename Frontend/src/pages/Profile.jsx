@@ -187,7 +187,7 @@ export const Profile = () => {
         </Typography>
         <Divider sx={{ mb: 2 }} />
         <Typography>
-          <strong>Account ID:</strong> {profile?.accountId || "N/A"}
+          <strong>Account ID:</strong> {profile?.id || "N/A"}
         </Typography>
         <Typography>
           <strong>Username:</strong> {profile?.username}
