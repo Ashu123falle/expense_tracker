@@ -42,6 +42,7 @@ export const Profile = () => {
   const [form, setForm] = useState({ fullName: "", email: "", username: "" });
   const [saving, setSaving] = useState(false);
 
+  // Fetch profile on mount
   useEffect(() => {
     if (!userId) return;
 
@@ -63,6 +64,7 @@ export const Profile = () => {
             email: res.data.email,
             username: res.data.username,
           });
+          localStorage.setItem("user", JSON.stringify(res.data));
         }
       } catch (err) {
         console.error("Failed to fetch profile", err.response?.data || err);
@@ -82,7 +84,14 @@ export const Profile = () => {
     setSaving(true);
     try {
       const res = await axiosInstance.put(`/users/${userId}`, form);
-      setProfile(res.data);
+
+      // Merge updated fields with existing profile to keep accountId and other data
+      const updatedProfile = { ...profile, ...res.data };
+      setProfile(updatedProfile);
+
+      // Update localStorage
+      localStorage.setItem("user", JSON.stringify(updatedProfile));
+
       setEditing(false);
     } catch (err) {
       console.error("Failed to save profile", err.response?.data || err);
@@ -180,11 +189,9 @@ export const Profile = () => {
         <Typography>
           <strong>Account ID:</strong> {profile?.accountId || "N/A"}
         </Typography>
-        
-          <Typography>
-            <strong>Username:</strong> {profile?.username}
-          </Typography>
-        
+        <Typography>
+          <strong>Username:</strong> {profile?.username}
+        </Typography>
       </Paper>
 
       {/* Account Summary */}
