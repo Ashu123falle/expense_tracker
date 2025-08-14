@@ -32,21 +32,21 @@ namespace ExpenseManager
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddCors(options =>
+           builder.Services.AddCors(options =>
             {
-                options.AddDefaultPolicy(policy =>
-                {
-                    policy
-                        // .WithOrigins("http://localhost:5173")
-                        .WithOrigins("https://expense-tracker-lac-nine-41.vercel.app")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                });
+                options.AddPolicy("AllowVercelFrontend",
+                    builder =>
+                    {
+                        builder
+                            .WithOrigins("https://expense-tracker-lac-nine-41.vercel.app") 
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    });
             });
 
 
             var app = builder.Build();
-            app.UseCors();
+            app.UseCors("AllowVercelFrontend");
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
