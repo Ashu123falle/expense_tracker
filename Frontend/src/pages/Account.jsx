@@ -23,7 +23,9 @@ import axiosInstance from "../api/axiosInstance";
 import { AuthContext } from "../contexts/AuthContext";
 import { ExpenseContext } from "../contexts/ExpenseContext";
 
-const API_URL = "https://localhost:7096/api/Accounts";
+// const API_URL = "https://localhost:7096/api/Accounts";
+const API_URL = "https://expense-tracker-ybyq.onrender.com/api/Accounts";
+
 
 export const Accounts = () => {
   const { accounts: contextAccounts, setAccounts: setContextAccounts } = useContext(ExpenseContext);
