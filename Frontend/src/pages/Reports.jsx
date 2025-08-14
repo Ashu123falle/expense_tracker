@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Typography,
   Button,
@@ -16,10 +16,10 @@ import {
 } from "@mui/material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useExpenses } from "../hooks/useExpenses";
-
+import { useExpenses } from "../contexts/ExpenseContext";
+import { format } from "date-fns";
 export const Reports = () => {
-  const { expenses = [] } = useExpenses();
+  const { expenses = [], income = [] } = useExpenses();
   const [filter, setFilter] = useState({ start: "", end: "" });
 
   const handleFilterChange = (e) => {
@@ -27,25 +27,37 @@ export const Reports = () => {
     setFilter((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Filter expenses by date
-  const filteredExpenses = expenses.filter((e) => {
-    const date = new Date(e.date);
-    const start = filter.start ? new Date(filter.start) : null;
-    const end = filter.end ? new Date(filter.end) : null;
-    if (start && date < start) return false;
-    if (end && date > end) return false;
-    return true;
-  });
+  // Merge and mark type for totals / display
+  const allItems = useMemo(() => {
+    const expItems = expenses.map((e) => ({ ...e, type: "expense" }));
+    const incItems = income.map((i) => ({ ...i, type: "income" }));
+    return [...expItems, ...incItems];
+  }, [expenses, income]);
 
-  const totalExpense = filteredExpenses
-    .filter((e) => e.isExpense)
-    .reduce((sum, e) => sum + e.amount, 0);
-  const totalIncome = filteredExpenses
-    .filter((e) => !e.isExpense)
-    .reduce((sum, e) => sum + e.amount, 0);
+  // Filter by date
+  const filteredItems = useMemo(() => {
+    return allItems.filter((item) => {
+      const itemDate = new Date(item.date);
+      const startDate = filter.start ? new Date(filter.start) : null;
+      const endDate = filter.end ? new Date(filter.end) : null;
+      if (startDate && itemDate < startDate) return false;
+      if (endDate && itemDate > endDate) return false;
+      return true;
+    });
+  }, [allItems, filter]);
 
+  // Totals
+  const totalExpense = filteredItems
+    .filter((i) => i.type === "expense")
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  const totalIncome = filteredItems
+    .filter((i) => i.type === "income")
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  // PDF generation
   const generatePDF = () => {
-    if (!filteredExpenses.length) return;
+    if (!filteredItems.length) return;
 
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -57,34 +69,32 @@ export const Reports = () => {
     // Summary
     doc.setFontSize(12);
     doc.text(`Total Expenses:  ${totalExpense.toLocaleString()}`, margin, 70);
-    doc.text(`Total Income:  ${totalIncome.toLocaleString()}`, margin, 90);
+    doc.text(`Total Income: ${totalIncome.toLocaleString()}`, margin, 90);
     doc.text(
-      `Date Range: ( ${filter.start || "Start"}) to  (${filter.end || "End"})`,
+      `Date Range: ${filter.start || "Start"} to ${filter.end || "End"}`,
       margin,
       110
     );
 
     // Table
-    const tableData = filteredExpenses.map((e) => [
-      new Date(e.date).toLocaleDateString(),
-      e.category,
-      e.notes || "-",
-      e.isExpense ? `- ${e.amount.toLocaleString()}` : `+ ${e.amount.toLocaleString()}`,
+    const tableData = filteredItems.map((i) => [
+      format(new Date(i.date), "dd MMM yyyy, hh:mm a"),
+      i.category || "-",
+      i.type === "expense" ? i.notes :i.source,
+      i.type === "expense" ? `- ${i.amount.toLocaleString()}` :`+ ${i.amount.toLocaleString()}`,
     ]);
 
     autoTable(doc, {
-  startY: 130,
-  head: [["Date", "Category", "Note", "Amount"]],
-  body: tableData,
-  styles: { fontSize: 10 },
-  headStyles: { fillColor: [63, 81, 181], textColor: 255, fontStyle: "bold" },
-  alternateRowStyles: { fillColor: [240, 240, 240] },
-  margin: { left: 40, right: 40 },
-  columnStyles: { 3: { halign: "right" } },
-});
+      startY: 130,
+      head: [["Date", "Category", "Note", "Amount"]],
+      body: tableData,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [63, 81, 181], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      margin: { left: 40, right: 40 },
+      columnStyles: { 3: { halign: "right" } },
+    });
 
-
-    // Save PDF
     doc.save("expense-report.pdf");
   };
 
@@ -94,7 +104,7 @@ export const Reports = () => {
         Expense Reports
       </Typography>
 
-      {/* Date Filter */}
+      {/* Date Filters */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <TextField
@@ -123,7 +133,7 @@ export const Reports = () => {
       {/* Summary Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6}>
-          <Card sx={{ border: "2px solid red", borderRadius: 2, bgcolor:"#f9babaff"}}>
+          <Card sx={{ border: "2px solid red", borderRadius: 2, bgcolor: "#f9babaff" }}>
             <CardContent>
               <Typography>Total Expenses</Typography>
               <Typography variant="h5" sx={{ color: "red" }}>
@@ -133,7 +143,7 @@ export const Reports = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Card sx={{ border: "2px solid green", borderRadius: 2, bgcolor:"#8af08dff"}}>
+          <Card sx={{ border: "2px solid green", borderRadius: 2, bgcolor: "#8af08dff" }}>
             <CardContent>
               <Typography>Total Income</Typography>
               <Typography variant="h5" sx={{ color: "green" }}>
@@ -158,32 +168,32 @@ export const Reports = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredExpenses.map((e, index) => (
+            {filteredItems.map((i) => (
               <TableRow
-                key={e.id}
+                key={i.id + i.date}
                 sx={{
                   "&:nth-of-type(odd)": { bgcolor: "grey.100" },
                   "&:hover": { bgcolor: "grey.200" },
                 }}
               >
-                <TableCell>{new Date(e.date).toLocaleDateString()}</TableCell>
-                <TableCell>{e.category}</TableCell>
-                <TableCell>{e.notes || "-"}</TableCell>
+                <TableCell>{new Date(i.date).toLocaleDateString()}</TableCell>
+                <TableCell>{i.category}</TableCell>
+                <TableCell>{i.type === "expense" ? i.notes : i.source}</TableCell>
                 <TableCell
                   align="right"
                   sx={{
-                    color: e.isExpense ? "error.main" : "success.main",
+                    color: i.type === "expense" ? "error.main" : "success.main",
                     fontWeight: 500,
                   }}
                 >
-                  {e.isExpense ? "- ₹" : "+ ₹"} {e.amount.toLocaleString()}
+                  {i.type === "expense" ? "- ₹" : "+ ₹"} {i.amount.toLocaleString()}
                 </TableCell>
               </TableRow>
             ))}
-            {filteredExpenses.length === 0 && (
+            {filteredItems.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                  No expenses found.
+                  No records found.
                 </TableCell>
               </TableRow>
             )}
@@ -195,7 +205,7 @@ export const Reports = () => {
         variant="contained"
         sx={{ mt: 3 }}
         onClick={generatePDF}
-        disabled={!filteredExpenses.length}
+        disabled={!filteredItems.length}
       >
         Download PDF
       </Button>

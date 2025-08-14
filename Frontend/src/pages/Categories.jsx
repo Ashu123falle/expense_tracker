@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useExpenses } from "../hooks/useExpenses";
 import axiosInstance from "../api/axiosInstance";
 import {
   Button,
   TextField,
   List,
-  ListItem,
   IconButton,
   Typography,
   FormControlLabel,
@@ -15,11 +14,31 @@ import {
   Paper,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { AuthContext } from "../contexts/AuthContext";
 
 export const Categories = () => {
+  const { user } = useContext(AuthContext);
   const { categories = [], setCategories } = useExpenses();
+
   const [newCategory, setNewCategory] = useState("");
   const [isExpense, setIsExpense] = useState(true);
+
+  // ✅ Fetch categories for logged-in user
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (!user?.id) return; // Avoid call if user not loaded
+      try {
+        const res = await axiosInstance.get(`/categories/by-user/${user.id}`);
+        console.log(res.data);
+        
+        setCategories(res.data);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, [user, setCategories]);
 
   const addCategory = async () => {
     if (!newCategory.trim()) return;
@@ -32,6 +51,7 @@ export const Categories = () => {
       const res = await axiosInstance.post("/categories", {
         name: newCategory,
         isExpense,
+        userId: user.id,
       });
       setCategories([...categories, res.data]);
       setNewCategory("");
@@ -44,8 +64,10 @@ export const Categories = () => {
   const deleteCategory = async (id) => {
     try {
       await axiosInstance.delete(`/categories/${id}`);
+       alert("Category deleted successfully ✅");
       setCategories(categories.filter((c) => c.id !== id));
     } catch (err) {
+      alert(" ⚠️(DELETE FAILED) There are records/transactions related to this category.please update or delete them first and TRY AGAIN")
       console.error("Error deleting category:", err);
     }
   };
@@ -82,35 +104,35 @@ export const Categories = () => {
         <Typography variant="body1">No categories yet.</Typography>
       ) : (
         <List>
-  {categories.map((cat) => (
-    <Paper
-      key={cat.id}
-      elevation={2}
-      sx={{
-        mb: 1,
-        p: 2,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        bgcolor: cat.isExpense ? "#ffe5e5" : "#e5ffe5", // light red for Expense, green for Income
-      }}
-    >
-      <Box>
-        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-          {cat.name}
-        </Typography>
-        <Chip
-          label={cat.isExpense ? "Expense" : "Income"}
-          size="small"
-          color={cat.isExpense ? "error" : "success"}
-        />
-      </Box>
-      <IconButton edge="end" onClick={() => deleteCategory(cat.id)}>
-        <DeleteIcon />
-      </IconButton>
-    </Paper>
-  ))}
-</List>
+          {categories.map((cat) => (
+            <Paper
+              key={cat.id}
+              elevation={2}
+              sx={{
+                mb: 1,
+                p: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                bgcolor: cat.isExpense ? "#ffe5e5" : "#e5ffe5",
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  {cat.name}
+                </Typography>
+                <Chip
+                  label={cat.isExpense ? "Expense" : "Income"}
+                  size="small"
+                  color={cat.isExpense ? "error" : "success"}
+                />
+              </Box>
+              <IconButton edge="end" onClick={() => deleteCategory(cat.id)}>
+                <DeleteIcon />
+              </IconButton>
+            </Paper>
+          ))}
+        </List>
       )}
     </Box>
   );

@@ -11,6 +11,7 @@ import { Login } from "../pages/Login";
 import { Register } from "../pages/Register";
 import { Navbar } from "../components/Navbar";
 import { LandingPage } from "../pages/LandingPage";
+import { Accounts } from "../pages/Account";
 
 export const AppRoutes = () => {
   const { user } = useContext(AuthContext);
@@ -62,6 +63,7 @@ export const AppRoutes = () => {
           path="/register"
           element={!user ? <Register /> : <Navigate to="/" />}
         />
+        <Route path="/accounts" element={<Accounts />} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" />} />

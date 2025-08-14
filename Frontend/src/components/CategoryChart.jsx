@@ -1,6 +1,17 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const COLORS = [
+  "#FF6B6B", // Coral Red
+  "#4ECDC4", // Turquoise
+  "#4795DA", // Bright Blue
+  "#F7B267", // Sunset Orange
+  "#81C784", // Mint Green
+  "#9C89B8", // Lavender
+  "#FFD166", // Sunny Yellow
+  "#FFA07A", // Light Salmon
+];
+
+
 
 export const CategoryChart = ({ data }) => {
   if (!data || data.length === 0) return <p>No category data</p>;
@@ -14,6 +25,7 @@ export const CategoryChart = ({ data }) => {
           nameKey="category"
           cx="50%"
           cy="50%"
+           innerRadius={60}
           outerRadius={100}
           fill="#8884d8"
           label

@@ -1,11 +1,11 @@
 import axiosInstance from "./axiosInstance";
 
 // Fetch all expenses and categories
-export const getExpenses = async () => {
+export const getExpenses = async (userId) => {
   try {
     const [expRes, catRes] = await Promise.all([
-      axiosInstance.get("/expenses"),
-      axiosInstance.get("/categories"),
+      axiosInstance.get(`/expenses/by-user/${userId}`), // now user-specific
+      axiosInstance.get(`/categories/by-user/${userId}`),
     ]);
     return { expenses: expRes.data, categories: catRes.data };
   } catch (err) {
@@ -15,9 +15,12 @@ export const getExpenses = async () => {
 };
 
 // Add new expense
-export const addExpense = async (expense) => {
+export const addExpense = async (expense, userId) => {
   try {
-    const res = await axiosInstance.post("/expenses", expense);
+    const res = await axiosInstance.post("/expenses", {
+      ...expense,
+      userId, // attach userId
+    });
     return res.data;
   } catch (err) {
     console.error("Error adding expense:", err);
@@ -26,9 +29,12 @@ export const addExpense = async (expense) => {
 };
 
 // Update existing expense
-export const updateExpense = async (expense) => {
+export const updateExpense = async (expense, userId) => {
   try {
-    const res = await axiosInstance.put(`/expenses/${expense.id}`, expense);
+    const res = await axiosInstance.put(`/expenses/${expense.id}`, {
+      ...expense,
+      userId, // attach userId
+    });
     return res.data;
   } catch (err) {
     console.error("Error updating expense:", err);

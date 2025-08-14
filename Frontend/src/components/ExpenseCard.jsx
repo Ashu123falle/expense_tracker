@@ -2,30 +2,65 @@ import { Card, CardContent, Typography, Chip, Box } from "@mui/material";
 import { format } from "date-fns";
 
 export const ExpenseCard = ({ expense }) => {
-  const chipColor = expense.isExpense ? "error" : "success";
-  const amountColor = expense.isExpense ? "error.main" : "success.main";
+  // Determine colors based on type
+  const isExpense = expense.type === "expense";
+  const chipColor = isExpense ? "error" : "success";
+  const amountColor = isExpense ? "error.main" : "success.main";
 
   return (
     <Card sx={{ mb: 2, boxShadow: 2 }}>
       <CardContent>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
-          <Typography variant="h6">{expense.title}</Typography>
-          <Chip label={expense.category} color={chipColor} size="small" sx={{ fontWeight: "bold" }} />
+        {/* Title & Category */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <Typography variant="h6">{expense.title || (isExpense ? "Expense" : "Income")}</Typography>
+          <Chip
+            label={expense.category || "Unknown"}
+            color={chipColor}
+            size="small"
+            sx={{ fontWeight: "bold" }}
+          />
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1, flexWrap: "wrap" }}>
+        {/* Amount & Date */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mt: 1,
+            flexWrap: "wrap",
+          }}
+        >
           <Typography variant="body1" sx={{ color: amountColor, fontWeight: "bold" }}>
-            {expense.isExpense ? "- ₹ " : "+ ₹ "}
-            {expense.amount.toLocaleString()}
+            {isExpense ? "- ₹ " : "+ ₹ "}
+            {expense.amount?.toLocaleString()}
           </Typography>
           <Typography variant="caption">
-            {format(new Date(expense.date), "dd MMM yyyy")}
+            {format(new Date(expense.date), "dd MMM yyyy, hh:mm a")}
           </Typography>
         </Box>
 
-        {expense.notes && (
-          <Typography variant="body2" sx={{ mt: 1, fontStyle: "italic", color: "text.secondary" }}>
-            {expense.notes}
+        {/* Notes or Source */}
+        {isExpense && expense.notes && (
+          <Typography
+            variant="body2"
+            sx={{ mt: 1, fontStyle: "italic", color: "text.secondary" }}
+          >
+           Note: {expense.notes}
+          </Typography>
+        )}
+        {!isExpense && expense.source && (
+          <Typography
+            variant="body2"
+            sx={{ mt: 1, fontStyle: "italic", color: "text.secondary" }}
+          >
+            Source: {expense.source}
           </Typography>
         )}
       </CardContent>

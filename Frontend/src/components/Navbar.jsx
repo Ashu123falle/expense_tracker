@@ -40,6 +40,7 @@ export const Navbar = () => {
         { label: "Dashboard", path: "/" },
         { label: "Expenses", path: "/expenses" },
         { label: "Categories", path: "/categories" },
+        { label: "Account", path: "/accounts" },
         { label: "Reports", path: "/reports" },
         { label: "Profile", path: "/profile" },
         { label: "Logout", action: handleLogout },

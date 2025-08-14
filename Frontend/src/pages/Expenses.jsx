@@ -1,119 +1,160 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
-  Box,
+  CircularProgress,
   Typography,
-  Button,
   Table,
+  TableHead,
   TableBody,
+  TableRow,
   TableCell,
   TableContainer,
-  TableHead,
-  TableRow,
   Paper,
+  Box,
+  IconButton,
   Dialog,
   DialogContent,
-  DialogTitle,
-  DialogActions,
 } from "@mui/material";
-import { ExpenseContext } from "../contexts/ExpenseContext";
-import { addExpense, updateExpense, deleteExpense } from "../api/expenseApi";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useExpenses } from "../contexts/ExpenseContext";
 import { ExpenseForm } from "../components/ExpenseForm";
+import axiosInstance from "../api/axiosInstance";
 
-export const Expenses = () => {
-  const { expenses, setExpenses, categories } = useContext(ExpenseContext);
-
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
-
-  const handleOpenDialog = (expense = null) => {
-    setEditingExpense(expense);
-    setOpenDialog(true);
+export function Expenses() {
+  const { expenses, income, setExpenses, setIncome, categories, loading } = useExpenses();
+  const [open, setOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null); // For edit
+ console.log(income);
+ 
+  const handleEdit = (item) => {
+    setCurrentItem(item);
+    setOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setEditingExpense(null);
-    setOpenDialog(false);
-  };
+  const handleDelete = async (item) => {
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
 
-  const handleSave = async (payload) => {
     try {
-      if (editingExpense) {
-        const updated = await updateExpense({ ...payload, id: editingExpense.id });
-        setExpenses((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
-      } else {
-        const newExp = await addExpense(payload);
-        setExpenses((prev) => [...prev, newExp]);
-      }
-      handleCloseDialog();
+      const endpoint = item.isExpense ? `/expenses/${item.id}` : `/incomes/${item.id}`;
+      await axiosInstance.delete(endpoint);
+
+      if (item.isExpense) setExpenses((prev) => prev.filter((e) => e.id !== item.id));
+      else setIncome((prev) => prev.filter((i) => i.id !== item.id));
     } catch (err) {
-      console.error("Error saving expense:", err.response?.data || err);
-      alert("Failed to save expense. Check console.");
+      console.error("Delete failed", err.response?.data || err);
+      alert("Failed to delete. Try again.");
     }
   };
+const handleSave = async (updatedFields) => {
+  try {
+    const endpoint = updatedFields.isExpense
+      ? `/expenses/${updatedFields.id}`
+      : `/incomes/${updatedFields.id}`;
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this expense?")) return;
-    try {
-      await deleteExpense(id);
-      setExpenses((prev) => prev.filter((e) => e.id !== id));
-    } catch (err) {
-      console.error("Error deleting expense:", err);
-      alert("Failed to delete expense. Check console.");
+    // Merge with old item to keep unedited fields
+    const oldItem = updatedFields.isExpense
+      ? expenses.find((e) => e.id === updatedFields.id)
+      : income.find((i) => i.id === updatedFields.id);
+
+    const payload = {
+      ...oldItem,          // keep all old values
+      ...updatedFields,    // overwrite only what was edited
+      date: updatedFields.date instanceof Date ? updatedFields.date.toISOString() : oldItem.date,
+    };
+
+    const res = await axiosInstance.put(endpoint, payload);
+
+    // Update context
+    if (updatedFields.isExpense) {
+      setExpenses((prev) =>
+        prev.map((e) => (e.id === updatedFields.id ? { ...res.data, category: updatedFields.category || e.category } : e))
+      );
+    } else {
+      setIncome((prev) =>
+        prev.map((i) => (i.id === updatedFields.id ? { ...res.data, category: updatedFields.category || i.category } : i))
+      );
     }
-  };
+
+    setOpen(false);
+    setCurrentItem(null);
+  } catch (err) {
+    console.error("Update failed", err.response?.data || err);
+    alert("Failed to update. Try again.");
+  }
+};
+
+
+if (loading) {
+  return (
+    <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+  
+  const renderTable = (items, type) => (
+    
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell><strong>Title</strong></TableCell>
+            <TableCell><strong>Amount</strong></TableCell>
+            <TableCell><strong>Category</strong></TableCell>
+            <TableCell><strong>Date</strong></TableCell>
+            <TableCell><strong>Actions</strong></TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.map((item) => (
+            
+            <TableRow key={item.id}>
+              <TableCell>{type === "expense" ? item.notes : item.source}</TableCell>
+              <TableCell>₹{item.amount}</TableCell>
+              <TableCell>{item.category}</TableCell>
+              <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <IconButton color="primary" onClick={() => handleEdit(item)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton color="error" onClick={() => handleDelete(item)}>
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 2 }}>
+    <Box p={3}>
+      <Typography variant="h5" gutterBottom>
         Expenses
       </Typography>
-      <Button variant="contained" sx={{ mb: 2 }} onClick={() => handleOpenDialog()}>
-        Add Expense
-      </Button>
+      {expenses.length > 0 ? renderTable(expenses, "expense") : <Typography>No expenses found.</Typography>}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Category</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Notes</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {expenses.map((exp) => (
-              <TableRow key={exp.id}>
-                <TableCell>{categories.find((c) => c.id === exp.categoryId)?.name || "N/A"}</TableCell>
-                <TableCell>{exp.amount}</TableCell>
-                <TableCell>{new Date(exp.date).toLocaleDateString()}</TableCell>
-                <TableCell>{exp.notes}</TableCell>
-                <TableCell>
-                  <Button size="small" onClick={() => handleOpenDialog(exp)}>
-                    Edit
-                  </Button>
-                  <Button size="small" color="error" onClick={() => handleDelete(exp.id)}>
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Box mt={4}>
+        <Typography variant="h5" gutterBottom>
+          Income
+        </Typography>
+        {income.length > 0 ? renderTable(income, "income") : <Typography>No income found.</Typography>}
+      </Box>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
-        <DialogTitle>{editingExpense ? "Edit Expense" : "Add Expense"}</DialogTitle>
+      {/* Edit Dialog */}
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogContent>
-          <ExpenseForm
-            expense={editingExpense}
-            categories={categories}
-            onSave={handleSave}
-            onCancel={handleCloseDialog}
-          />
+          {currentItem && (
+            <ExpenseForm
+              categories={categories}
+             expense={currentItem}
+              onSave={handleSave}
+              onCancel={() => setOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </Box>
   );
-};
+}
