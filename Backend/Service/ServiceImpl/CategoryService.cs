@@ -19,7 +19,8 @@ namespace ExpenseManager.Service.ServiceImpl
             var category = new Category
             {
                 Name = request.Name,
-                IsExpense = request.IsExpense
+                IsExpense = request.IsExpense,
+                UserId = request.UserId
             };
 
             _context.Categories.Add(category);
@@ -65,14 +66,24 @@ namespace ExpenseManager.Service.ServiceImpl
             return MapToResponse(category);
         }
 
+        public async Task<IEnumerable<CategoryResponseDto>> GetCategoriesByUserIdAsync(int userId)
+        {
+            var categories = await _context.Categories
+         .Where(c => c.UserId == userId)
+         .Include(c => c.Expenses)
+         .Include(c => c.Incomes)
+         .ToListAsync();
 
+            return categories.Select(MapToResponse).ToList();
+        }
         private CategoryResponseDto MapToResponse(Category category)
         {
             return new CategoryResponseDto
             {
                 Id = category.Id,
                 Name = category.Name,
-                IsExpense = category.IsExpense
+                IsExpense = category.IsExpense,
+                UserId = category.UserId
             };
         }
     }

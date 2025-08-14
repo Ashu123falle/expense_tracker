@@ -73,6 +73,24 @@ namespace ExpenseManager.Service.ServiceImpl
             return MapToResponse(income);
         }
 
+        public async Task<IEnumerable<IncomeResponseDto>> GetByUserIdAsync(int userId)
+        {
+            var incomes = await _context.Incomes
+                .Where(i => i.UserId == userId)
+                .Select(i => new IncomeResponseDto
+                {
+                    Id = i.Id,
+                    AccountId = i.AccountId,
+                    CategoryId = i.CategoryId,
+                    UserId = i.UserId,
+                    Amount = i.Amount,
+                    Date = i.Date,
+                    Source = i.Source
+                })
+                .ToListAsync();
+
+            return incomes;
+        }
 
         private IncomeResponseDto MapToResponse(Income income)
         {

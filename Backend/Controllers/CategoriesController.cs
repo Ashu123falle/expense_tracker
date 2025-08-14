@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using ExpenseManager.DTOs;
+﻿using ExpenseManager.DTOs;
+using ExpenseManager.Models;
 using ExpenseManager.Service;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ExpenseManager.Controllers
 {
@@ -58,6 +59,17 @@ namespace ExpenseManager.Controllers
             var deleted = await _categoryService.DeleteAsync(id);
             if (!deleted) return NotFound();
             return NoContent();
+        }
+
+        [HttpGet("by-user/{userId}")]
+        public async Task<ActionResult<IEnumerable<CategoryResponseDto>>> GetCategoriesByUserId(int userId)
+        {
+            var categories = await _categoryService.GetCategoriesByUserIdAsync(userId);
+
+            if (!categories.Any())
+                return NotFound($"No categories found for user with ID {userId}.");
+
+            return Ok(categories);
         }
     }
 }

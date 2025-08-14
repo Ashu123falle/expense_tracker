@@ -68,6 +68,17 @@ namespace ExpenseManager.Controllers
                 return NotFound();
             return NoContent();
         }
+        // GET: api/Accounts/by-user/{userId}
+        [HttpGet("by-user/{userId}")]
+        public async Task<ActionResult<IEnumerable<AccountResponseDto>>> GetAccountsByUserId(int userId)
+        {
+            var accounts = await _accountService.GetByUserIdAsync(userId);
+            if (accounts == null || !accounts.Any())
+                return NotFound();
+
+            return Ok(accounts);
+        }
+
     }
 
 

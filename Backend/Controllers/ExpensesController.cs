@@ -59,5 +59,13 @@ namespace ExpenseManager.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
+        // GET: api/Expenses/by-user/{userId}
+        [HttpGet("by-user/{userId}")]
+        public async Task<ActionResult<IEnumerable<ExpenseResponseDto>>> GetExpensesByUser(int userId)
+        {
+            var expenses = await _expenseService.GetByUserIdAsync(userId);
+            return Ok(expenses);
+        }
+
     }
 }

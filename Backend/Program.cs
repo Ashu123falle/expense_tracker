@@ -3,6 +3,7 @@ using ExpenseManager.Data;
 using ExpenseManager.Service;
 using ExpenseManager.Service.ServiceImpl;
 using Microsoft.EntityFrameworkCore;
+using System;
 namespace ExpenseManager
 {
     public class Program
@@ -11,8 +12,11 @@ namespace ExpenseManager
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            //builder.Services.AddDbContext<ExpenseManagerDbContext>(options =>
+            //  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddDbContext<ExpenseManagerDbContext>(options =>
-              options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IBudgetService, BudgetService>();

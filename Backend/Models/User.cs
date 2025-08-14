@@ -11,6 +11,8 @@
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
         public ICollection<Budget> Budgets { get; set; } = new List<Budget>();
         public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
+        public ICollection<Category> Categories { get; set; } = new List<Category>();
+
     }
 
 }

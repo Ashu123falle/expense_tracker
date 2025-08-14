@@ -10,6 +10,8 @@ namespace ExpenseManager.Service
         Task<AccountResponseDto> CreateAsync(AccountRequestDto request);
         Task<AccountResponseDto> UpdateAsync(int id, AccountRequestDto request);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<AccountResponseDto>> GetByUserIdAsync(int userId);
+
     }
 
 }

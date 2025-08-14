@@ -80,5 +80,22 @@ namespace ExpenseManager.Service.ServiceImpl
                 Balance = account.Balance
             };
         }
+        public async Task<IEnumerable<AccountResponseDto>> GetByUserIdAsync(int userId)
+        {
+            var accounts = await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .Select(a => new AccountResponseDto
+                {
+                    Id = a.Id,
+                    AccountName = a.AccountName,
+                    AccountType = a.AccountType,
+                    Balance = a.Balance,
+                    UserId = a.UserId
+                })
+                .ToListAsync();
+
+            return accounts;
+        }
+
     }
 }

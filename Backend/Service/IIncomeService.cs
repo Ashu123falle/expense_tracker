@@ -10,6 +10,8 @@ namespace ExpenseManager.Service
         Task<IncomeResponseDto> CreateAsync(IncomeRequestDto request);
         Task<IncomeResponseDto> UpdateAsync(int id, IncomeRequestDto request);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<IncomeResponseDto>> GetByUserIdAsync(int userId);
+
     }
 
 }

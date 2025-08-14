@@ -1,4 +1,5 @@
 ﻿using ExpenseManager.DTOs;
+using ExpenseManager.Models;
 
 namespace ExpenseManager.Service
 {
@@ -9,5 +10,7 @@ namespace ExpenseManager.Service
         Task<CategoryResponseDto> CreateAsync(CategoryRequestDto request);
         Task<CategoryResponseDto> UpdateAsync(int id, CategoryRequestDto request);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<CategoryResponseDto>> GetCategoriesByUserIdAsync(int userId);
+
     }
 }

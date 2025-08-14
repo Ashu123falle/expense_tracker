@@ -84,6 +84,24 @@ namespace ExpenseManager.Service.ServiceImpl
 
             return MapToResponse(expense);
         }
+        public async Task<IEnumerable<ExpenseResponseDto>> GetByUserIdAsync(int userId)
+        {
+            var expenses = await _context.Expenses
+                .Where(e => e.UserId == userId)
+                .Select(e => new ExpenseResponseDto
+                {
+                    Id = e.Id,
+                    AccountId = e.AccountId,
+                    CategoryId = e.CategoryId,
+                    UserId = e.UserId,
+                    Amount = e.Amount,
+                    Date = e.Date,
+                    Notes = e.Notes
+                })
+                .ToListAsync();
+
+            return expenses;
+        }
 
         private ExpenseResponseDto MapToResponse(Expense expense)
         {
