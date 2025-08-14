@@ -37,7 +37,8 @@ namespace ExpenseManager
                 options.AddDefaultPolicy(policy =>
                 {
                     policy
-                        .WithOrigins("http://localhost:5173") // your frontend URL
+                        // .WithOrigins("http://localhost:5173")
+                        .WithOrigins("https://expense-tracker-lac-nine-41.vercel.app")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
