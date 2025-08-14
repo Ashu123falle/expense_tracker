@@ -54,7 +54,7 @@ export const Accounts = () => {
   // Fetch accounts from backend and update context
   const fetchAccounts = async (userId) => {
     try {
-      const res = await axiosInstance.get(`${API_URL}/by-user/${userId}`);
+      const res = await axiosInstance.get(`${API_URL}/${userId}`);
       setContextAccounts(res.data);
     } catch (err) {
       console.error("Error fetching accounts:", err);
@@ -97,7 +97,7 @@ export const Accounts = () => {
   const handleSave = async () => {
     try {
       if (editing) {
-        await axiosInstance.put(`${API_URL}/${editing.id}`, form);
+        await axiosInstance.put(`${API_URL}/${user.id}`, form);
       } else {
         await axiosInstance.post(API_URL, form);
       }
